@@ -44,57 +44,48 @@ import com.example.myapplication.components.AppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class AddTagActivity : ComponentActivity() {
+class DeleteTagActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid
 
         setContent {
-            val tagState = remember { mutableStateOf("") }
+            val tagId = intent.getStringExtra("tagId")
+            val tagName = intent.getStringExtra("tag")
             var isLoading by remember { mutableStateOf(false) }
 
-            fun addTag(tag: String) {
-                val auth = FirebaseAuth.getInstance()
+            fun deleteTag(id: String) {
                 val db = FirebaseFirestore.getInstance()
-                val uid = auth.currentUser?.uid
 
-                if (uid != null) {
-                    val tagData = hashMapOf(
-                        "tag_name" to tag,
-                        "user_uid" to uid,
-                    )
-                    db.collection("tags")
-                        .add(tagData)
-                        .addOnSuccessListener {
-                            isLoading = false
-                            Toast.makeText(
-                                applicationContext,
-                                "Tag added successfully",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            onBackPressed()
-                        }
-                        .addOnFailureListener { e ->
-                            Toast.makeText(
-                                applicationContext,
-                                "Error adding tag: $e",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                            isLoading = false
-                        }
-                } else {
+                if (tagName == "All") {
                     Toast.makeText(
-                        applicationContext,
-                        "User is not authenticated.",
-                        Toast.LENGTH_SHORT
+                        applicationContext, "You can't delete All Tag", Toast.LENGTH_SHORT
                     ).show()
                     isLoading = false
-
+                } else if (uid != null) {
+                    db.collection("tags").document(id).delete().addOnSuccessListener {
+                        isLoading = false
+                        Toast.makeText(
+                            applicationContext, "Note deleted successfully", Toast.LENGTH_SHORT
+                        ).show()
+                        onBackPressed()
+                    }.addOnFailureListener { e ->
+                        Toast.makeText(
+                            applicationContext, "Error deleting note: $e", Toast.LENGTH_SHORT
+                        ).show()
+                        isLoading = false
+                    }
+                } else {
+                    Toast.makeText(
+                        applicationContext, "User is not authenticated.", Toast.LENGTH_SHORT
+                    ).show()
+                    isLoading = false
                 }
             }
 
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = Color.Black
+                modifier = Modifier.fillMaxSize(), color = Color.Black
             ) {
                 Column(
                     modifier = Modifier
@@ -111,16 +102,18 @@ class AddTagActivity : ComponentActivity() {
                         horizontalArrangement = Arrangement.Start,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.arrow_left_square),
+                        Image(painter = painterResource(id = R.drawable.arrow_left_square),
                             contentDescription = null,
-                            modifier = Modifier.height(30.dp).width(30.dp).padding(4.dp).clickable {
-                                onBackPressed()
-                            }
-                        )
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp)
+                                .padding(4.dp)
+                                .clickable {
+                                    onBackPressed()
+                                })
                         Spacer(modifier = Modifier.width(15.dp))
                         Text(
-                            text = "Add Tag",
+                            text = "Delete Tag",
                             fontSize = 20.sp,
                             textAlign = TextAlign.Start,
                             fontWeight = FontWeight.Normal,
@@ -129,60 +122,29 @@ class AddTagActivity : ComponentActivity() {
                         )
                     }
                     Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
+                        modifier = Modifier.fillMaxSize(),
                         verticalArrangement = Arrangement.SpaceBetween,
                     ) {
                         Column(
                             modifier = Modifier.padding(15.dp),
 
                             ) {
-                            OutlinedTextField(
-                                value = tagState.value,
-                                onValueChange = { tagState.value = it },
-                                label = {
-                                    Text(
-                                        "Tag Name",
-                                        fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                maxLines = 1,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                textStyle = TextStyle(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                ),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    cursorColor = Color.White,
-                                    focusedBorderColor = Color.White,
-                                    unfocusedBorderColor = Color.Gray,
-                                ),
-                            )
-
                             Spacer(modifier = Modifier.height(15.dp))
                             Text(
-                                text = "Using tags can be a powerful organizational tool for you to categorize and find your notes more efficiently".uppercase(),
-                                fontSize = 15.sp,
+                                text = "Are you sure want to delete you tag?".uppercase(),
+                                fontSize = 18.sp,
                                 textAlign = TextAlign.Start,
-                                fontWeight = FontWeight.Light,
+                                fontWeight = FontWeight.Normal,
                                 fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                color = Color.Gray
+                                color = Color.White
                             )
                         }
                         Column {
                             Button(
                                 onClick = {
-                                    if (tagState.value.isEmpty()) {
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Please enter tag name!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        isLoading = true
-                                        addTag(tagState.value.trim())
+                                    isLoading = true
+                                    if (tagId != null) {
+                                        deleteTag(tagId)
                                     }
                                 },
                                 modifier = Modifier
@@ -192,7 +154,7 @@ class AddTagActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
                             ) {
                                 Text(
-                                    text = if (isLoading) "Loading..." else "Add Tag",
+                                    text = if (isLoading) "Loading..." else "Delete Tag",
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.dot_matrix)),
                                     fontWeight = FontWeight.Bold,

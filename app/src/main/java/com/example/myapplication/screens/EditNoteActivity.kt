@@ -60,7 +60,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Date
 import java.util.Locale
 
-class AddNoteActivity : ComponentActivity() {
+class EditNoteActivity : ComponentActivity() {
     private lateinit var tagViewModel: TagViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -83,10 +83,27 @@ class AddNoteActivity : ComponentActivity() {
         }
 
         setContent {
+            val id = intent.getStringExtra("id")
+            val title = intent.getStringExtra("title")
+            val description = intent.getStringExtra("desc")
+            val tag = intent.getStringExtra("tag")
+
             val titleState = remember { mutableStateOf("") }
             val descState = remember { mutableStateOf("") }
             val tagState = remember { mutableStateOf("") }
             var isLoading by remember { mutableStateOf(false) }
+
+            if (title != null) {
+                titleState.value = title
+            }
+
+            if (description != null) {
+                descState.value = description
+            }
+
+            if (tag != null) {
+                tagState.value = tag
+            }
 
             val colorsArray = arrayOf(
                 "yellow",
@@ -96,7 +113,7 @@ class AddNoteActivity : ComponentActivity() {
                 "cream",
             )
 
-            fun addNote(title: String, desc: String, tag: String) {
+            fun updateNote(id: String, title: String, desc: String, tag: String) {
                 val db = FirebaseFirestore.getInstance()
 
                 if (uid != null) {
@@ -104,23 +121,17 @@ class AddNoteActivity : ComponentActivity() {
                     val tagData = hashMapOf(
                         "title" to title,
                         "description" to desc,
-                        if (tagState.value.trim().isEmpty()) {
-                            "tag" to defaultTag
-                        } else {
-                            "tag" to tag
-                        },
-                        "color" to colorsArray.random(),
-                        "user_uid" to uid,
-                        "created_at" to currentDateTime(),
-                        "updated_at" to currentDateTime(),
+                        "tag" to if (tag.trim().isEmpty()) defaultTag else tag,
+                        "updated_at" to currentDateTime()
                     )
                     db.collection("notes")
-                        .add(tagData)
+                        .document(id)
+                        .update(tagData as Map<String, Any>)
                         .addOnSuccessListener {
                             isLoading = false
                             Toast.makeText(
                                 applicationContext,
-                                "Note added successfully",
+                                "Note updated successfully",
                                 Toast.LENGTH_SHORT
                             ).show()
                             onBackPressed()
@@ -128,7 +139,7 @@ class AddNoteActivity : ComponentActivity() {
                         .addOnFailureListener { e ->
                             Toast.makeText(
                                 applicationContext,
-                                "Error adding note: $e",
+                                "Error updating note: $e",
                                 Toast.LENGTH_SHORT
                             ).show()
                             isLoading = false
@@ -140,9 +151,9 @@ class AddNoteActivity : ComponentActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                     isLoading = false
-
                 }
             }
+
 
             val tagsState = tagViewModel.tagsState.value
             Surface(
@@ -167,13 +178,17 @@ class AddNoteActivity : ComponentActivity() {
                         Image(
                             painter = painterResource(id = R.drawable.arrow_left_square),
                             contentDescription = null,
-                            modifier = Modifier.height(30.dp).width(30.dp).padding(4.dp).clickable {
-                                onBackPressed()
-                            }
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp)
+                                .padding(4.dp)
+                                .clickable {
+                                    onBackPressed()
+                                }
                         )
                         Spacer(modifier = Modifier.width(15.dp))
                         Text(
-                            text = "Add Note",
+                            text = "Edit Note",
                             fontSize = 20.sp,
                             textAlign = TextAlign.Start,
                             fontWeight = FontWeight.Normal,
@@ -380,11 +395,14 @@ class AddNoteActivity : ComponentActivity() {
                                         ).show()
                                     } else {
                                         isLoading = true
-                                        addNote(
-                                            titleState.value.trim(),
-                                            descState.value.trim(),
-                                            tagState.value.trim()
-                                        )
+                                        if (id != null) {
+                                            updateNote(
+                                                id,
+                                                titleState.value.trim(),
+                                                descState.value.trim(),
+                                                tagState.value.trim()
+                                            )
+                                        }
                                     }
                                 },
                                 modifier = Modifier
@@ -394,7 +412,7 @@ class AddNoteActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
                             ) {
                                 Text(
-                                    text = if (isLoading) "Loading..." else "Add Note",
+                                    text = if (isLoading) "Loading..." else "Save",
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.dot_matrix)),
                                     fontWeight = FontWeight.Bold,

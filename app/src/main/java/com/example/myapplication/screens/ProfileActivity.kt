@@ -6,6 +6,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,7 +90,31 @@ class ProfileActivity : ComponentActivity() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    AppBar().TitleBackBar("Profile")
+                    Row(
+                        modifier = Modifier
+                            .padding(horizontal = 15.dp)
+                            .height(60.dp)
+                            .fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Start,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.arrow_left_square),
+                            contentDescription = null,
+                            modifier = Modifier.height(30.dp).width(30.dp).padding(4.dp).clickable {
+                                onBackPressed()
+                            }
+                        )
+                        Spacer(modifier = Modifier.width(15.dp))
+                        Text(
+                            text = "Profile",
+                            fontSize = 20.sp,
+                            textAlign = TextAlign.Start,
+                            fontWeight = FontWeight.Normal,
+                            fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                            color = Color.White
+                        )
+                    }
                     Spacer(modifier = Modifier.height(30.dp))
                     Box(
                         modifier = Modifier

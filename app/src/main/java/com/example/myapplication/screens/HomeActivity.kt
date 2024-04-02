@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.ViewModelProvider
 import com.example.myapplication.R
+import com.example.myapplication.auth.LoginActivity
 import com.example.myapplication.components.AppBar
 import com.example.myapplication.model.Note
 import com.example.myapplication.model.NotesViewModel
@@ -49,6 +50,7 @@ import com.google.firebase.auth.FirebaseAuth
 class HomeActivity : ComponentActivity() {
     private lateinit var tagViewModel: TagViewModel
     private lateinit var noteViewModel: NotesViewModel
+
     @OptIn(ExperimentalFoundationApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,8 +75,7 @@ class HomeActivity : ComponentActivity() {
             }
 
             Surface(
-                modifier = Modifier.fillMaxSize(),
-                color = Color.Black
+                modifier = Modifier.fillMaxSize(), color = Color.Black
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     Column(
@@ -95,17 +96,15 @@ class HomeActivity : ComponentActivity() {
                                 fontFamily = FontFamily(Font(R.font.dot_matrix)),
                                 color = Color.White
                             )
-                            Box(
-                                modifier = Modifier
-                                    .size(40.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.primary)
-                                    .clickable {
-                                        val intent =
-                                            Intent(applicationContext, ProfileActivity::class.java)
-                                        startActivity(intent)
-                                    }
-                            ) {
+                            Box(modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                                .clickable {
+                                    val intent =
+                                        Intent(applicationContext, ProfileActivity::class.java)
+                                    startActivity(intent)
+                                }) {
                                 Image(
                                     painter = painterResource(id = R.drawable.user_rounded_icon),
                                     contentDescription = null,
@@ -124,23 +123,34 @@ class HomeActivity : ComponentActivity() {
                             LazyRow {
                                 items(tagsState.size) { tag ->
                                     Row {
-                                        Box(
-                                            modifier = Modifier
-                                                .border(
-                                                    width = 1.5.dp,
-                                                    color = Color.White,
-                                                    shape = RoundedCornerShape(25.dp)
-                                                )
-                                                .clickable {
-                                                    if (uid != null) {
-                                                        noteViewModel.fetchNotesByUserUid(
-                                                            uid,
-                                                            tagsState[tag].tagName
-                                                        )
-                                                        nameChanger(tagsState[tag].tagName)
-                                                    }
+                                        Box(modifier = Modifier
+                                            .border(
+                                                width = 1.5.dp,
+                                                color = Color.White,
+                                                shape = RoundedCornerShape(25.dp)
+                                            )
+                                            .combinedClickable(onClick = {
+                                                if (uid != null) {
+                                                    noteViewModel.fetchNotesByUserUid(
+                                                        uid, tagsState[tag].tagName
+                                                    )
+                                                    nameChanger(tagsState[tag].tagName)
                                                 }
-                                                .padding(vertical = 6.dp, horizontal = 15.dp),
+                                            }, onLongClick = {
+                                                val intent = Intent(
+                                                    this@HomeActivity,
+                                                    DeleteTagActivity::class.java
+                                                )
+                                                intent.putExtra(
+                                                    "tagId", tagsState[tag].id
+                                                )
+                                                intent.putExtra(
+                                                    "tag", tagsState[tag].tagName
+                                                )
+                                                startActivity(intent)
+                                            }, onLongClickLabel = ""
+                                            )
+                                            .padding(vertical = 6.dp, horizontal = 15.dp),
                                             contentAlignment = Alignment.Center
                                         ) {
                                             Text(
@@ -214,29 +224,38 @@ class HomeActivity : ComponentActivity() {
                                                         .fillMaxWidth()
                                                         .combinedClickable(
                                                             onClick = {
-                                                                Toast
-                                                                    .makeText(
-                                                                        applicationContext,
-                                                                        "click",
-                                                                        Toast.LENGTH_SHORT
-                                                                    )
-                                                                    .show()
+                                                                val intent = Intent(
+                                                                    this@HomeActivity,
+                                                                    NoteDetailsActivity::class.java
+                                                                )
+                                                                intent.putExtra(
+                                                                    "id", notesState[note].id
+                                                                )
+                                                                intent.putExtra(
+                                                                    "title", notesState[note].title
+                                                                )
+                                                                intent.putExtra(
+                                                                    "description",
+                                                                    notesState[note].description
+                                                                )
+                                                                intent.putExtra(
+                                                                    "tag", notesState[note].tag
+                                                                )
+                                                                startActivity(intent)
                                                             },
-                                                            onLongClick = {
-                                                                Toast
-                                                                    .makeText(
-                                                                        applicationContext,
-                                                                        "Long click",
-                                                                        Toast.LENGTH_SHORT
-                                                                    )
-                                                                    .show()
-
-                                                            },
+//                                                            onLongClick = {
+//                                                                Toast
+//                                                                    .makeText(
+//                                                                        applicationContext,
+//                                                                        "Long click",
+//                                                                        Toast.LENGTH_SHORT
+//                                                                    )
+//                                                                    .show()
+//
+//                                                            },
                                                             onLongClickLabel = ""
                                                         )
-
-                                                        .padding(0.dp),
-                                                    colors = colors
+                                                        .padding(0.dp), colors = colors
                                                 ) {
                                                     Column(
                                                         modifier = Modifier.padding(16.dp),

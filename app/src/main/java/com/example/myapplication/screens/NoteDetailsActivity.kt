@@ -1,5 +1,6 @@
 package com.example.myapplication.screens
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -44,31 +45,34 @@ import com.example.myapplication.components.AppBar
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class AddTagActivity : ComponentActivity() {
+class NoteDetailsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val auth = FirebaseAuth.getInstance()
+        val uid = auth.currentUser?.uid
+
+        val id = intent.getStringExtra("id")
+        val title = intent.getStringExtra("title")
+        val description = intent.getStringExtra("description")
+        val tag = intent.getStringExtra("tag")
 
         setContent {
             val tagState = remember { mutableStateOf("") }
             var isLoading by remember { mutableStateOf(false) }
 
-            fun addTag(tag: String) {
-                val auth = FirebaseAuth.getInstance()
+            fun deleteNote(id: String) {
                 val db = FirebaseFirestore.getInstance()
-                val uid = auth.currentUser?.uid
 
                 if (uid != null) {
-                    val tagData = hashMapOf(
-                        "tag_name" to tag,
-                        "user_uid" to uid,
-                    )
-                    db.collection("tags")
-                        .add(tagData)
+                    db.collection("notes")
+                        .document(id)
+                        .delete()
                         .addOnSuccessListener {
                             isLoading = false
                             Toast.makeText(
                                 applicationContext,
-                                "Tag added successfully",
+                                "Note deleted successfully",
                                 Toast.LENGTH_SHORT
                             ).show()
                             onBackPressed()
@@ -76,7 +80,7 @@ class AddTagActivity : ComponentActivity() {
                         .addOnFailureListener { e ->
                             Toast.makeText(
                                 applicationContext,
-                                "Error adding tag: $e",
+                                "Error deleting note: $e",
                                 Toast.LENGTH_SHORT
                             ).show()
                             isLoading = false
@@ -88,7 +92,6 @@ class AddTagActivity : ComponentActivity() {
                         Toast.LENGTH_SHORT
                     ).show()
                     isLoading = false
-
                 }
             }
 
@@ -114,13 +117,17 @@ class AddTagActivity : ComponentActivity() {
                         Image(
                             painter = painterResource(id = R.drawable.arrow_left_square),
                             contentDescription = null,
-                            modifier = Modifier.height(30.dp).width(30.dp).padding(4.dp).clickable {
-                                onBackPressed()
-                            }
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp)
+                                .padding(4.dp)
+                                .clickable {
+                                    onBackPressed()
+                                }
                         )
                         Spacer(modifier = Modifier.width(15.dp))
                         Text(
-                            text = "Add Tag",
+                            text = "Note Details",
                             fontSize = 20.sp,
                             textAlign = TextAlign.Start,
                             fontWeight = FontWeight.Normal,
@@ -137,53 +144,60 @@ class AddTagActivity : ComponentActivity() {
                             modifier = Modifier.padding(15.dp),
 
                             ) {
-                            OutlinedTextField(
-                                value = tagState.value,
-                                onValueChange = { tagState.value = it },
-                                label = {
-                                    Text(
-                                        "Tag Name",
-                                        fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                    )
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                maxLines = 1,
-                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                                textStyle = TextStyle(
-                                    color = Color.White,
-                                    fontWeight = FontWeight.Bold,
-                                    fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                ),
-                                colors = OutlinedTextFieldDefaults.colors(
-                                    cursorColor = Color.White,
-                                    focusedBorderColor = Color.White,
-                                    unfocusedBorderColor = Color.Gray,
-                                ),
+                            Text(
+                                text = "Title".uppercase(),
+                                fontSize = 18.sp,
+                                textAlign = TextAlign.Start,
+                                fontWeight = FontWeight.Medium,
+                                fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                                color = Color.White
                             )
-
+                            Spacer(modifier = Modifier.height(4.dp))
+                            if (title != null) {
+                                Text(
+                                    text = title,
+                                    fontSize = 17.sp,
+                                    textAlign = TextAlign.Start,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                                    color = Color.White
+                                )
+                            }
                             Spacer(modifier = Modifier.height(15.dp))
                             Text(
-                                text = "Using tags can be a powerful organizational tool for you to categorize and find your notes more efficiently".uppercase(),
-                                fontSize = 15.sp,
+                                text = "Description".uppercase(),
+                                fontSize = 18.sp,
                                 textAlign = TextAlign.Start,
-                                fontWeight = FontWeight.Light,
+                                fontWeight = FontWeight.Medium,
                                 fontFamily = FontFamily(Font(R.font.dot_matrix)),
-                                color = Color.Gray
+                                color = Color.White
                             )
+                            Spacer(modifier = Modifier.height(5.dp))
+                            if (description != null) {
+                                Text(
+                                    text = description,
+                                    fontSize = 17.sp,
+                                    textAlign = TextAlign.Start,
+                                    fontWeight = FontWeight.Normal,
+                                    fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                                    color = Color.White
+                                )
+                            }
                         }
                         Column {
                             Button(
                                 onClick = {
-                                    if (tagState.value.isEmpty()) {
-                                        Toast.makeText(
-                                            applicationContext,
-                                            "Please enter tag name!",
-                                            Toast.LENGTH_SHORT
-                                        ).show()
-                                    } else {
-                                        isLoading = true
-                                        addTag(tagState.value.trim())
-                                    }
+                                    isLoading = true
+                                    val intent = Intent(
+                                        this@NoteDetailsActivity,
+                                        EditNoteActivity::class.java
+                                    )
+                                    intent.putExtra("id", id)
+                                    intent.putExtra("title", title)
+                                    intent.putExtra("desc", description)
+                                    intent.putExtra("tag", tag)
+                                    startActivity(intent)
+
                                 },
                                 modifier = Modifier
                                     .padding(15.dp)
@@ -192,7 +206,28 @@ class AddTagActivity : ComponentActivity() {
                                 colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
                             ) {
                                 Text(
-                                    text = if (isLoading) "Loading..." else "Add Tag",
+                                    text = "Edit",
+                                    fontSize = 16.sp,
+                                    fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                                    fontWeight = FontWeight.Bold,
+                                    color = Color.White,
+                                )
+                            }
+                            Button(
+                                onClick = {
+                                        isLoading = true
+                                        if (id != null) {
+                                            deleteNote(id)
+                                        }
+                                },
+                                modifier = Modifier
+                                    .padding(top = 0.dp, start = 15.dp, end = 15.dp)
+                                    .height(50.dp)
+                                    .fillMaxWidth(),
+                                colors = ButtonDefaults.buttonColors(MaterialTheme.colorScheme.primary),
+                            ) {
+                                Text(
+                                    text = if (isLoading) "Loading..." else "Delete",
                                     fontSize = 16.sp,
                                     fontFamily = FontFamily(Font(R.font.dot_matrix)),
                                     fontWeight = FontWeight.Bold,

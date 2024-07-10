@@ -187,7 +187,6 @@ class NoteDetailsActivity : ComponentActivity() {
                         Column {
                             Button(
                                 onClick = {
-                                    isLoading = true
                                     val intent = Intent(
                                         this@NoteDetailsActivity,
                                         EditNoteActivity::class.java

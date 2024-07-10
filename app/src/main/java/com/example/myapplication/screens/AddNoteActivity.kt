@@ -177,7 +177,7 @@ class AddNoteActivity : ComponentActivity() {
                             fontSize = 20.sp,
                             textAlign = TextAlign.Start,
                             fontWeight = FontWeight.Normal,
-                            fontFamily = FontFamily(Font(R.font.dot_matrix)),
+                            fontFamily = FontFamily(),
                             color = Color.White
                         )
                     }

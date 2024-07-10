@@ -101,9 +101,13 @@ class ProfileActivity : ComponentActivity() {
                         Image(
                             painter = painterResource(id = R.drawable.arrow_left_square),
                             contentDescription = null,
-                            modifier = Modifier.height(30.dp).width(30.dp).padding(4.dp).clickable {
-                                onBackPressed()
-                            }
+                            modifier = Modifier
+                                .height(30.dp)
+                                .width(30.dp)
+                                .padding(4.dp)
+                                .clickable {
+                                    onBackPressed()
+                                }
                         )
                         Spacer(modifier = Modifier.width(15.dp))
                         Text(

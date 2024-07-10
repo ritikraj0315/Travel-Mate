@@ -4,5 +4,5 @@ Travel-Mate is an innovative app designed to help users find travel companions f
 
 ## Technologies Used:
 - `Firebase Database`: Utilized for secure and real-time data storage and retrieval. Firebase enables seamless synchronization of user data across different devices.
-- `Java`: Employed for the backend logic, ensuring robust and efficient processing of user requests and app functionalities.
+- `Kotlin`: Employed for the backend logic, ensuring robust and efficient processing of user requests and app functionalities.
 - `XML`: Used for designing the user interface, providing a clean and intuitive experience for users as they navigate through the app.
